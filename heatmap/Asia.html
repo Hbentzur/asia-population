@@ -1,0 +1,230 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <meta charset='utf-8' />
+  <title>Asia Heat Map</title>
+  <meta name='viewport' content='initial-scale=1,maximum-scale=1,user-scalable=no' />
+  <script src='https://api.tiles.mapbox.com/mapbox-gl-js/v0.44.1/mapbox-gl.js'></script>
+  <link href='https://api.tiles.mapbox.com/mapbox-gl-js/v0.44.1/mapbox-gl.css' rel='stylesheet' />
+  <style>
+    @font-face {
+      font-family: myFirstFont;
+      src: url("./BIG JOHN.otf");
+    }
+
+    body {
+      margin: 0;
+      padding: 0;
+    }
+
+    #map {
+      position: absolute;
+      top: 0;
+      bottom: 0;
+      width: 100%;
+    }
+
+    #menu {
+      position: relative;
+      z-index: 1;
+      top: 20px;
+      left: 10px;
+      border-radius: 1px;
+      width: 80px;
+      border-style: solid;
+      border: 0.2px solid rgba(0, 0, 0, 0.4);
+      font-family: myFirstFont;
+    }
+
+    #menu a {
+      font-size: 15px;
+      color: rgba(255,255,255,0.2);
+      display: block;
+      margin: 0;
+      padding: 0px;
+      padding: 10px;
+      text-decoration: none;
+      text-align: center;
+      border-style: solid;
+    }
+
+    #menu a:last-child {
+    }
+
+    #menu a:hover {
+      font-size: 16px;
+      background: rgba(255, 255, 255, 0.1);
+    }
+
+    #menu a.active {
+      color: white;
+      background: rgba(255, 255, 255, 0.4);
+    }
+
+    #menu a.active:hover {
+      /* border-style: solid; */
+      background: rgba(255, 255, 255, 0.4);
+    }
+  </style>
+</head>
+
+<body>
+  <div id='map'></div>
+  <nav id="menu"></nav>
+
+  <script>
+    mapboxgl.accessToken = 'pk.eyJ1IjoiaGJ0IiwiYSI6ImNqOHo4NGh5czJpYXIzMnA4bnYybmtrcWQifQ.xFGp_QLgqKIrkPgCdJBtZA';
+    var map = new mapboxgl.Map({
+      container: 'map',
+      style: 'mapbox://styles/hbt/cjgl3caz800402rqwnwe9ya61',
+      center: [75.268497, 29.463131],
+      zoom: 2.5
+    });
+
+    map.on('load', function() {
+
+      // Asia the year of 2000
+      map.addSource('asia', {
+        type: 'geojson',
+        data: './Data/Asia_ppl_s.geojson'
+      });
+
+      map.addLayer({
+        id: '2000',
+        type: 'heatmap',
+        source: 'asia',
+        'layout': {
+          'visibility': 'visible'
+        },
+        maxzoom: 15,
+        paint: {
+
+          // increase weight as diameter breast height increases
+          'heatmap-weight': {
+            property: '2000_ppl',
+            type: 'exponential',
+            stops: [
+              [1, 0],
+              [500000, 1]
+            ]
+          },
+          // increase intensity as zoom level increases
+          'heatmap-intensity': {
+            stops: [
+              [11, 1],
+              [15, 10]
+            ]
+          },
+          // assign color values be applied to points depending on their density
+          'heatmap-color': [
+            'interpolate', ['linear'],
+            ['heatmap-density'],
+            0, 'rgba(120,120,120,0.1)',
+            0.1, 'rgba(253,162,0,0.5)',
+            0.2, 'rgba(230,183,154,0.5)',
+            0.4, 'rgba(8,8,117,0.5)',
+            0.6, 'rgba(2,4,42,0.5)'
+          ],
+          // increase radius as zoom increases
+          'heatmap-radius': {
+            stops: [
+              [11, 15],
+              [15, 20]
+            ]
+          },
+        },
+      });
+
+      // Asia the year of 2020
+      map.addSource('asia_2020', {
+        type: 'geojson',
+        data: './Data/Asia_ppl_2020.geojson'
+      });
+
+      map.addLayer({
+        id: '2020',
+        type: 'heatmap',
+        source: 'asia_2020',
+        'layout': {
+          'visibility': 'visible'
+        },
+        maxzoom: 15,
+        paint: {
+
+          // increase weight as diameter breast height increases
+          'heatmap-weight': {
+            property: '2000_ppl',
+            type: 'exponential',
+            stops: [
+              [1, 0],
+              [500000, 1]
+            ]
+          },
+          // increase intensity as zoom level increases
+          'heatmap-intensity': {
+            stops: [
+              [11, 1],
+              [15, 10]
+            ]
+          },
+          // assign color values be applied to points depending on their density
+          'heatmap-color': [
+            'interpolate', ['linear'],
+            ['heatmap-density'],
+            0, 'rgba(120,120,120,0.1)',
+            0.1, 'rgba(253,162,0,0.5)',
+            0.2, 'rgba(230,183,154,0.5)',
+            0.4, 'rgba(8,8,117,0.5)',
+            0.6, 'rgba(2,4,42,0.5)'
+          ],
+          // increase radius as zoom increases
+          'heatmap-radius': {
+            stops: [
+              [11, 15],
+              [15, 20]
+            ]
+          },
+        }
+      });
+
+    });
+
+
+
+    // button
+    var toggleableLayerIds = ['2000', '2020'];
+
+
+    for (var i = 0; i < toggleableLayerIds.length; i++) {
+      var id = toggleableLayerIds[i];
+
+      var link = document.createElement('a');
+      link.href = '#';
+      link.className = 'active';
+      link.textContent = id;
+
+      link.onclick = function(e) {
+        var clickedLayer = this.textContent;
+        e.preventDefault();
+        e.stopPropagation();
+
+        var visibility = map.getLayoutProperty(clickedLayer, 'visibility');
+
+        if (visibility === 'visible') {
+          map.setLayoutProperty(clickedLayer, 'visibility', 'none');
+          this.className = '';
+        } else {
+          this.className = 'active';
+          map.setLayoutProperty(clickedLayer, 'visibility', 'visible');
+        }
+      };
+
+      var layers = document.getElementById('menu');
+      layers.appendChild(link);
+    }
+  </script>
+
+</body>
+
+</html>
